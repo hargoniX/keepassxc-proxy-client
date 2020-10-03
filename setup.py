@@ -29,7 +29,6 @@ setup(
         "Issue tracker": "https://github.com/hargoniX/keepassxc-proxy-client/issues",
         "Changelog": "https://github.com/hargoniX/keepassxc-proxy-client/blob/master/CHANGELOG.md",
     },
-    license="BSD",
     packages=["keepassxc_proxy_client"],
     zip_safe=True,
     entry_points={"console_scripts": ["keepassxc_proxy_client = keepassxc_proxy_client.__main__:main"]},
