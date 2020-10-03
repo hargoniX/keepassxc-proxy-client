@@ -2,11 +2,11 @@
 
 A small library as well as CLI tool to fetch information from a running keepassxc instance.
 
-# CLI
+## CLI
 
 See `keepassxc_proxy_client --help` for usage.
 
-# Library
+## Library
 
 You can use it like this:
 ```python
