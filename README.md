@@ -2,6 +2,12 @@
 
 A small library as well as CLI tool to fetch information from a running keepassxc instance.
 
+# CLI
+
+See `keepassxc_proxy_client --help` for usage.
+
+# Library
+
 You can use it like this:
 ```python
 import keepassxc_proxy_client
@@ -26,10 +32,10 @@ import keepassxc_proxy_client.protocol
 
 connection = keepassxc_proxy_client.protocol.Connection()
 connection.connect()
-id, public_key = connection.dump_associate()
+name, public_key = connection.dump_associate()
 # save it and read it in again for later
 
-connection.load_associate(id, public_key)
+connection.load_associate(name, public_key)
 print(connection.test_associate())
 ```
 
