@@ -14,6 +14,7 @@ class ResponseUnsuccesfulException(Exception):
 
 
 class Connection:
+
     def __init__(self):
         self.private_key = PrivateKey.generate()
         self.public_key = self.private_key.public_key
@@ -34,13 +35,16 @@ class Connection:
         self.box = Box(self.private_key, PublicKey(base64.b64decode(response["publicKey"])))
         self.nonce = (int.from_bytes(self.nonce, "big") + 1).to_bytes(24, "big")
 
+    @staticmethod
     def get_socket_path():
-        server_name = "/org.keepassxc.KeePassXC.BrowserServer"
+        server_name = "org.keepassxc.KeePassXC.BrowserServer"
         system = platform.system()
         if system == "Linux" and "XDG_RUNTIME_DIR" in os.environ:
-            return os.environ["XDG_RUNTIME_DIR"] + server_name
+            return os.path.join(os.environ["XDG_RUNTIME_DIR"], server_name)
+        elif system == "Darwin" and "TMPDIR" in os.environ:
+            return os.path.join(os.getenv("TMPDIR"), server_name)
         else:
-            return "/tmp" + server_name
+            return os.path.join("/tmp", server_name)
 
     def change_public_keys(self):
         return {
