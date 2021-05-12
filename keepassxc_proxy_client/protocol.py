@@ -8,19 +8,68 @@ import os
 import nacl.utils
 from nacl.public import PrivateKey, Box, PublicKey
 
+if platform.system() == "Windows":
+	try:
+		import win32file
+		import getpass
+	except:
+		print("Please install win32file via 'pip/pip3 install pywin32'")
+		exit(1)	
+
 
 class ResponseUnsuccesfulException(Exception):
     pass
 
+class WinSock:
+    """ A basic socket wrapper for Windows named pipes """
+
+    def __init__(self, desired_access, creation_disposition, share_mode=0,
+                 security_attributes=None, flags_and_attributes=0, input_nullok=None):
+        self.desired_access = desired_access
+        self.creation_disposition = creation_disposition
+        self.share_mode = share_mode
+        self.security_attributes = security_attributes
+        self.flags_and_attributes = flags_and_attributes
+        self.input_nullok = input_nullok
+        self.handle = None
+
+    def connect(self, address):
+        try:
+            self.handle = win32file.CreateFile(
+                r'\\.\pipe\%s' % address,
+                self.desired_access,
+                self.share_mode,
+                self.security_attributes,
+                self.creation_disposition,
+                self.flags_and_attributes,
+                self.input_nullok
+            )
+        except Exception as e:
+            raise Exception(
+                "Could not connect to pipe {addr}".format(addr=address), e
+            )
+
+    def close(self):
+        if self.handle:
+            self.handle.close()
+
+    def sendall(self, message):
+        win32file.WriteFile(self.handle, message)
+
+    def recv(self, buff_size):
+        response_code, data = win32file.ReadFile(self.handle, buff_size)
+        return data
 
 class Connection:
-
     def __init__(self):
         self.private_key = PrivateKey.generate()
         self.public_key = self.private_key.public_key
         self.nonce = nacl.utils.random(24)
         self.client_id = base64.b64encode(nacl.utils.random(24)).decode("utf-8")
-        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        if platform.system() == "Windows":
+            self.socket = WinSock(win32file.GENERIC_READ | win32file.GENERIC_WRITE, win32file.OPEN_EXISTING)
+        else:
+            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
     def connect(self, path=None):
         if path is None:
@@ -35,16 +84,16 @@ class Connection:
         self.box = Box(self.private_key, PublicKey(base64.b64decode(response["publicKey"])))
         self.nonce = (int.from_bytes(self.nonce, "big") + 1).to_bytes(24, "big")
 
-    @staticmethod
     def get_socket_path():
-        server_name = "org.keepassxc.KeePassXC.BrowserServer"
+        server_name = "/org.keepassxc.KeePassXC.BrowserServer"
         system = platform.system()
         if system == "Linux" and "XDG_RUNTIME_DIR" in os.environ:
-            return os.path.join(os.environ["XDG_RUNTIME_DIR"], server_name)
-        elif system == "Darwin" and "TMPDIR" in os.environ:
-            return os.path.join(os.getenv("TMPDIR"), server_name)
+            return os.environ["XDG_RUNTIME_DIR"] + server_name
+        elif system == "Windows":
+            pathWin = "org.keepassxc.KeePassXC.BrowserServer_"  + getpass.getuser()
+            return pathWin
         else:
-            return os.path.join("/tmp", server_name)
+            return "/tmp" + server_name
 
     def change_public_keys(self):
         return {
