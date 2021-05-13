@@ -9,12 +9,9 @@ import nacl.utils
 from nacl.public import PrivateKey, Box, PublicKey
 
 if platform.system() == "Windows":
-	try:
-		import win32file
-		import getpass
-	except:
-		print("Please install win32file via 'pip/pip3 install pywin32'")
-		exit(1)	
+	import win32file
+	import getpass
+	
 
 
 class ResponseUnsuccesfulException(Exception):
@@ -70,7 +67,7 @@ class Connection:
             self.socket = WinSock(win32file.GENERIC_READ | win32file.GENERIC_WRITE, win32file.OPEN_EXISTING)
         else:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
+            
     def connect(self, path=None):
         if path is None:
             path = Connection.get_socket_path()
