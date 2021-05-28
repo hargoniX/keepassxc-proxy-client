@@ -17,8 +17,8 @@ if platform.system() == "Windows":
 class ResponseUnsuccesfulException(Exception):
     pass
 
-class WinSock:
-    """ A basic socket wrapper for Windows named pipes """
+class WinNamedPipe:
+    """ Unix socket API compatible class for accessing Windows named pipes """
 
     def __init__(self, desired_access, creation_disposition, share_mode=0,
                  security_attributes=None, flags_and_attributes=0, input_nullok=None):
@@ -43,7 +43,7 @@ class WinSock:
             )
         except Exception as e:
             raise Exception(
-                "Could not connect to pipe {addr}".format(addr=address), e
+                "Error: Connection could not be established to pipe {addr}".format(addr=address), e
             )
 
     def close(self):
@@ -54,7 +54,7 @@ class WinSock:
         win32file.WriteFile(self.handle, message)
 
     def recv(self, buff_size):
-        response_code, data = win32file.ReadFile(self.handle, buff_size)
+        _, data = win32file.ReadFile(self.handle, buff_size)
         return data
 
 class Connection:
@@ -64,7 +64,7 @@ class Connection:
         self.nonce = nacl.utils.random(24)
         self.client_id = base64.b64encode(nacl.utils.random(24)).decode("utf-8")
         if platform.system() == "Windows":
-            self.socket = WinSock(win32file.GENERIC_READ | win32file.GENERIC_WRITE, win32file.OPEN_EXISTING)
+            self.socket = WinNamedPipe(win32file.GENERIC_READ | win32file.GENERIC_WRITE, win32file.OPEN_EXISTING)
         else:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             
