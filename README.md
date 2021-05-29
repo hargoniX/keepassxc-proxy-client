@@ -22,6 +22,15 @@ print(connection.test_associate())
 print(connection.dump_associate())
 print(connection.get_logins("https://github.com"))
 ```
+Please always use a URL with http or https for retreiving logins, otherwise no logins will be found.
+You can use `connection.get_logins("https://github.com")` when you actually stored URL just as "github.com" 
+within KeepassXC. This will work. 
+However it won't work using get_logins("github.com") even if you have stored URL as "github.com".
+
+To connect and retreive logins from KeepassXC Browser integration has to be enabled in settings. 
+Checkboxes for different Browser don't need to be checked. Enabled browser integration is enough 
+for keepassxc_proxy_client to work.
+
 
 If you want to dump and later read in the associate information you can do this
 as follows:
@@ -32,9 +41,15 @@ import keepassxc_proxy_client.protocol
 
 connection = keepassxc_proxy_client.protocol.Connection()
 connection.connect()
+connection.associate()
 name, public_key = connection.dump_associate()
+print("Got connection named '", name, "' with key", public_key)
 # save it and read it in again for later
 
+#Later usage
+
+connection = keepassxc_proxy_client.protocol.Connection()
+connection.connect()
 connection.load_associate(name, public_key)
 print(connection.test_associate())
 ```
