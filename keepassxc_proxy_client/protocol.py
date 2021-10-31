@@ -130,14 +130,14 @@ class Connection:
     def dump_associate(self):
         return (self.associate_id, self.id_public_key._public_key)
 
-    def test_associate(self):
+    def test_associate(self, trigger_unlock = False):
         msg = {
             "action": "test-associate",
             "id": self.associate_id,
             "key": base64.b64encode(self.id_public_key._public_key).decode("utf-8")
         }
 
-        self.send_encrypted_message(msg)
+        self.send_encrypted_message(msg, trigger_unlock)
         self.get_encrypted_response()
         return True
 
@@ -174,7 +174,7 @@ class Connection:
             raise ResponseUnsuccesfulException(raw_response)
         return response
 
-    def send_encrypted_message(self, msg):
+    def send_encrypted_message(self, msg, trigger_unlock = False):
         encrypted = base64.b64encode(self.box.encrypt(json.dumps(msg).encode("utf-8"), nonce=self.nonce).ciphertext)
         msg = {
             "action": msg["action"],
@@ -182,5 +182,7 @@ class Connection:
             "nonce": base64.b64encode(self.nonce).decode("utf-8"),
             "clientID": self.client_id
         }
+        if (trigger_unlock):
+            msg['triggerUnlock'] = 'true'
         self.socket.sendall(json.dumps(msg).encode("utf-8"))
         self.nonce = (int.from_bytes(self.nonce, "big") + 1).to_bytes(24, "big")
