@@ -160,6 +160,15 @@ class Connection:
         else:
             return response["entries"]
 
+    def get_database_groups(self):
+        msg = {
+            "action": "get-database-groups",
+        }
+
+        self.send_encrypted_message(msg)
+        response = self.get_encrypted_response()
+        return response
+
     def get_unencrypted_response(self):
         data = []
         while True:
