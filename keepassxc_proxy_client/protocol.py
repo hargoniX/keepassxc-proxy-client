@@ -161,7 +161,19 @@ class Connection:
             return response["entries"]
 
     def get_unencrypted_response(self):
-        return json.loads(self.socket.recv(4096).decode("utf-8"))
+        data = []
+        while True:
+            try:
+                new_data = self.socket.recv(4096)
+                if new_data:
+                    data.append(new_data.decode('utf-8'))
+                else:
+                    break
+                if len(new_data) < 4096:
+                    break
+            except:
+                pass
+        return json.loads(''.join(data))
 
     def get_encrypted_response(self):
         raw_response = self.get_unencrypted_response()
