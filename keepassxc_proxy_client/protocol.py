@@ -169,6 +169,15 @@ class Connection:
         response = self.get_encrypted_response()
         return response
 
+    def get_database_entries(self):
+        msg = {
+            "action": "get-database-entries",
+        }
+
+        self.send_encrypted_message(msg)
+        response = self.get_encrypted_response()
+        return response
+
     def get_unencrypted_response(self):
         data = []
         while True:
