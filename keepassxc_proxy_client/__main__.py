@@ -72,6 +72,25 @@ def main():
 
         print(logins[0]["password"])
         sys.exit(0)
+    elif command == "unlock":
+        if len(sys.argv) < 3:
+            print("Too few arguments provided, see --help for usage")
+            sys.exit(1)
+
+        associate_file = sys.argv[2]
+        association = json.load(open(associate_file, "r"))
+
+        connection = keepassxc_proxy_client.protocol.Connection()
+        connection.connect()
+
+        connection.load_associate(
+            association["name"],
+            base64.b64decode(association["public_key"].encode("utf-8"))
+        )
+
+        print(connection.test_associate(True))
+
+        sys.exit(0)
     else:
         print("Unkown subcommand, see --help for usage")
         sys.exit(1)
