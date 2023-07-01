@@ -17,6 +17,10 @@ keepassxc_proxy_client get <file> <url>: Reads a keepassxc association from
 <file> and attempts to get the first password for <url>. Will exit with 1 if the
 assocation is not valid for the running keepassxc instance or the no logins are
 found for the given URL.
+
+keepassxc_proxy_client unlock <file>: Causes a running KeepassXC instance
+to launch a dialogue window to allow the user to unlock a locked database.
+If the database is already unlocked it has no effect.
 """
 
 
