@@ -85,6 +85,9 @@ class Connection:
         server_name = "org.keepassxc.KeePassXC.BrowserServer"
         system = platform.system()
         if system == "Linux" and "XDG_RUNTIME_DIR" in os.environ:
+            flatpak_socket_path = os.path.join(os.environ["XDG_RUNTIME_DIR"], "app/org.keepassxc.KeePassXC", server_name)
+            if os.path.exists(flatpak_socket_path):
+                return flatpak_socket_path
             return os.path.join(os.environ["XDG_RUNTIME_DIR"], server_name)
         elif system == "Darwin" and "TMPDIR" in os.environ:
             return os.path.join(os.getenv("TMPDIR"), server_name)
