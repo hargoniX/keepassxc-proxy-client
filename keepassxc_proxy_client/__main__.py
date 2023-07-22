@@ -15,7 +15,7 @@ passwords that are related to a URL, thus it should be stored safely.
 
 keepassxc_proxy_client get <file> <url>: Reads a keepassxc association from
 <file> and attempts to get the first password for <url>. Will exit with 1 if the
-assocation is not valid for the running keepassxc instance or the no logins are
+association is not valid for the running keepassxc instance or the no logins are
 found for the given URL.
 
 keepassxc_proxy_client unlock <file>: Causes a running KeepassXC instance
