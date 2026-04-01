@@ -88,6 +88,9 @@ class Connection:
             flatpak_socket_path = os.path.join(os.environ["XDG_RUNTIME_DIR"], "app/org.keepassxc.KeePassXC", server_name)
             if os.path.exists(flatpak_socket_path):
                 return flatpak_socket_path
+            snap_socket_path= os.path.join(os.environ["HOME"], "snap/keepassxc/common", server_name)
+            if os.path.exists(snap_socket_path):
+                return snap_socket_path
             return os.path.join(os.environ["XDG_RUNTIME_DIR"], server_name)
         elif system == "Darwin" and "TMPDIR" in os.environ:
             return os.path.join(os.getenv("TMPDIR"), server_name)
