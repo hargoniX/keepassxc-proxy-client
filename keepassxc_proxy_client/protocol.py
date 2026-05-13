@@ -4,14 +4,13 @@ import socket
 import json
 import platform
 import os
+import getpass
 
 import nacl.utils
 from nacl.public import PrivateKey, Box, PublicKey
 
 if platform.system() == "Windows":
 	import win32file
-	import getpass
-	
 
 
 class ResponseUnsuccesfulException(Exception):
@@ -57,14 +56,43 @@ class WinNamedPipe:
         _, data = win32file.ReadFile(self.handle, buff_size)
         return data
 
+
+class CygwinPipe:
+    def __init__(self, flags):
+        self.flags = flags
+        self.fd = None
+
+    def connect(self, address):
+        try:
+            self.fd = os.open(r"\\.\pipe\%s" % address, self.flags)
+        except Exception as e:
+            raise Exception(
+                "Error: Connection could not be established to pipe {addr}".format(addr=address), e
+            )
+
+    def close(self):
+        if self.fd is not None:
+            os.close(self.fd)
+            self.fd = None
+
+    def sendall(self, message):
+        os.write(self.fd, message)
+
+    def recv(self, buff_size):
+        return os.read(self.fd, buff_size)
+
+
 class Connection:
     def __init__(self):
         self.private_key = PrivateKey.generate()
         self.public_key = self.private_key.public_key
         self.nonce = nacl.utils.random(24)
         self.client_id = base64.b64encode(nacl.utils.random(24)).decode("utf-8")
-        if platform.system() == "Windows":
+        system = platform.system()
+        if system == "Windows":
             self.socket = WinNamedPipe(win32file.GENERIC_READ | win32file.GENERIC_WRITE, win32file.OPEN_EXISTING)
+        elif system.startswith("CYGWIN_NT"):
+            self.socket = CygwinPipe(os.O_RDWR | os.O_BINARY)
         else:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             
@@ -91,7 +119,7 @@ class Connection:
             return os.path.join(os.environ["XDG_RUNTIME_DIR"], server_name)
         elif system == "Darwin" and "TMPDIR" in os.environ:
             return os.path.join(os.getenv("TMPDIR"), server_name)
-        elif system == "Windows":
+        elif system == "Windows" or system.startswith("CYGWIN_NT"):
             pathWin = "org.keepassxc.KeePassXC.BrowserServer_"  + getpass.getuser()
             return pathWin
         else:
