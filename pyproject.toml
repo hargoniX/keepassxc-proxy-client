@@ -33,6 +33,7 @@ classifiers = [
 ]
 dependencies = [
     "pynacl",
+    "platformdirs",
     "pywin32; sys_platform == 'win32'",
 ]
 

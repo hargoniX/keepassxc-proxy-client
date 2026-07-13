@@ -1,9 +1,32 @@
 import argparse
 
-from keepassxc_proxy_client import commands
+from keepassxc_proxy_client import commands, keystore
+
+
+def _add_file_arg(p, default):
+    p.add_argument(
+        "--file",
+        "-f",
+        default=default,
+        help="Path to the keystore JSON file. Defaults to %(default)s.",
+    )
+
+
+def _add_id_arg(p):
+    p.add_argument(
+        "--id",
+        "-i",
+        dest="id",
+        default=None,
+        help=(
+            "Association id to use. If omitted, all stored associations are tried "
+            "in turn until one authenticates successfully."
+        ),
+    )
 
 
 def build_parser():
+    default_keystore = keystore.default_path()
     parser = argparse.ArgumentParser(
         prog="keepassxc_proxy_client",
         description="Client for the KeePassXC Browser Integration protocol.",
@@ -15,10 +38,23 @@ def build_parser():
         help="Create a new association with a running KeePassXC instance.",
         description=(
             "Connects to a locally running keepassxc instance and creates a new "
-            "association (this will prompt a dialogue from KeePassXC). The "
-            "association is printed to stdout as JSON. Note that the public key "
-            "printed is secret and should be stored safely."
+            "association (this will prompt a dialogue from KeePassXC). Without "
+            "--save the association is printed to stdout as JSON. With --save it "
+            "is persisted to the keystore file under the id returned by "
+            "KeePassXC."
         ),
+    )
+    _add_file_arg(p_create, default_keystore)
+    p_create.add_argument(
+        "--save",
+        "-s",
+        action="store_true",
+        help="Persist the new association to the keystore file instead of printing it.",
+    )
+    p_create.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite an existing association with the same id (use with --save).",
     )
     p_create.set_defaults(func=commands.cmd_create)
 
@@ -26,12 +62,14 @@ def build_parser():
         "get",
         help="Get the first password for an entry matched by URL.",
         description=(
-            "Reads a keepassxc association from <file> and attempts to get the "
-            "first password for <url>. Exits with 1 if the association is not "
-            "valid for the running keepassxc instance or no logins are found."
+            "Reads keepassxc associations from the keystore file and attempts "
+            "to get the first password for <url>. Each stored association is "
+            "tried until one authenticates. Exits with 1 if no association "
+            "authenticates or no logins are found."
         ),
     )
-    p_get.add_argument("file", help="Path to the association JSON file.")
+    _add_file_arg(p_get, default_keystore)
+    _add_id_arg(p_get)
     p_get.add_argument("url", help="URL to look up.")
     p_get.set_defaults(func=commands.cmd_get)
 
@@ -39,12 +77,14 @@ def build_parser():
         "totp",
         help="Get the current TOTP for an entry UUID.",
         description=(
-            "Reads a keepassxc association from <file> and attempts to get the "
-            "current TOTP for <uuid>. Exits with 1 if the association is not "
-            "valid for the running keepassxc instance or no TOTP is found."
+            "Reads keepassxc associations from the keystore file and attempts "
+            "to get the current TOTP for <uuid>. Each stored association is "
+            "tried until one authenticates. Exits with 1 if no association "
+            "authenticates or no TOTP is found."
         ),
     )
-    p_totp.add_argument("file", help="Path to the association JSON file.")
+    _add_file_arg(p_totp, default_keystore)
+    _add_id_arg(p_totp)
     p_totp.add_argument("uuid", help="Entry UUID.")
     p_totp.set_defaults(func=commands.cmd_totp)
 
@@ -57,7 +97,8 @@ def build_parser():
             "already unlocked it has no effect."
         ),
     )
-    p_unlock.add_argument("file", help="Path to the association JSON file.")
+    _add_file_arg(p_unlock, default_keystore)
+    _add_id_arg(p_unlock)
     p_unlock.set_defaults(func=commands.cmd_unlock)
 
     return parser
